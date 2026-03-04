@@ -1,8 +1,12 @@
 package main
 
 import (
+	"context"
 	"fmt"
 	"net/http"
+	"os"
+	"os/signal"
+	"syscall"
 
 	"github.com/ariefsibuea/flight-aggregator/configs"
 
@@ -19,7 +23,15 @@ func main() {
 		})
 	})
 
-	if err := e.Start(fmt.Sprintf(":%d", conf.Port)); err != nil {
+	ctx, stop := signal.NotifyContext(context.Background(), os.Interrupt, syscall.SIGTERM)
+	defer stop()
+
+	sc := echo.StartConfig{
+		Address:         fmt.Sprintf(":%d", conf.Port),
+		GracefulTimeout: conf.GracefulTimeout,
+	}
+
+	if err := sc.Start(ctx, e); err != nil {
 		e.Logger.Error("failed to start server", "error", err)
 	}
 }
