@@ -1,7 +1,7 @@
 services:
     api:
         image: flight-aggregator:latest
-        container_name: flight_aggregator
+        container_name: flight-aggregator
         build: .
         ports:
             - "8080:8080"
@@ -10,6 +10,9 @@ services:
         depends_on:
             redis:
                 condition: service_healthy
+        networks:
+            - flight-network
+
     redis:
         image: redis:8.0.6-alpine
         healthcheck:
@@ -17,3 +20,9 @@ services:
             interval: 5s
             timeout: 3s
             retries: 5
+        networks:
+            - flight-network
+
+networks:
+    flight-network:
+        driver: bridge

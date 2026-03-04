@@ -7,6 +7,11 @@ import (
 	"github.com/kelseyhightower/envconfig"
 )
 
+var (
+	conf Config
+	once sync.Once
+)
+
 type Config struct {
 	Port            int           `envconfig:"PORT" default:"8080"`
 	ProviderTimeout time.Duration `envconfig:"PROVIDER_TIMEOUT" default:"200ms"`
@@ -16,12 +21,8 @@ type Config struct {
 }
 
 func Get() Config {
-	conf := Config{}
-	once := sync.Once{}
-
 	once.Do(func() {
 		envconfig.MustProcess("", &conf)
 	})
-
 	return conf
 }
