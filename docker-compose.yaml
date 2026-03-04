@@ -1,0 +1,19 @@
+services:
+    api:
+        image: flight-aggregator:latest
+        container_name: flight_aggregator
+        build: .
+        ports:
+            - "8080:8080"
+        env_file:
+            - .env
+        depends_on:
+            redis:
+                condition: service_healthy
+    redis:
+        image: redis:8.0.6-alpine
+        healthcheck:
+            test: ["CMD", "redis-cli", "ping"]
+            interval: 5s
+            timeout: 3s
+            retries: 5
