@@ -1,14 +1,18 @@
 package model
 
-import "time"
+import (
+	"time"
+
+	"github.com/ariefsibuea/flight-aggregator/pkg/types"
+)
 
 type SearchRequest struct {
-	Origin        string    `json:"origin"`
-	Destination   string    `json:"destination"`
-	DepartureDate time.Time `json:"departure_date"`
-	ReturnDate    time.Time `json:"return_date,omitempty"`
-	Passengers    int       `json:"passengers"`
-	CabinClass    string    `json:"cabin_class"`
+	Origin        string      `json:"origin"`
+	Destination   string      `json:"destination"`
+	DepartureDate types.Date  `json:"departure_date"`
+	ReturnDate    *types.Date `json:"return_date,omitempty"`
+	Passengers    int         `json:"passengers"`
+	CabinClass    string      `json:"cabin_class"`
 }
 
 type SearchResponse struct {
