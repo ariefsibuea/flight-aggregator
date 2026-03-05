@@ -2,6 +2,7 @@ package main
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"net/http"
 	"os"
@@ -10,14 +11,14 @@ import (
 
 	"github.com/ariefsibuea/flight-aggregator/configs"
 
-	"github.com/labstack/echo/v5"
+	"github.com/labstack/echo/v4"
 )
 
 func main() {
 	e := echo.New()
 	conf := configs.Get()
 
-	e.GET("/health", func(c *echo.Context) error {
+	e.GET("/health", func(c echo.Context) error {
 		return c.JSON(http.StatusOK, map[string]interface{}{
 			"status": "OK",
 		})
@@ -26,12 +27,19 @@ func main() {
 	ctx, stop := signal.NotifyContext(context.Background(), os.Interrupt, syscall.SIGTERM)
 	defer stop()
 
-	sc := echo.StartConfig{
-		Address:         fmt.Sprintf(":%d", conf.Port),
-		GracefulTimeout: conf.GracefulTimeout,
-	}
+	go func() {
+		address := fmt.Sprintf(":%d", conf.Port)
+		if err := e.Start(address); err != nil && !errors.Is(err, http.ErrServerClosed) {
+			e.Logger.Fatalf("shutting down the server: %v", err)
+		}
+	}()
 
-	if err := sc.Start(ctx, e); err != nil {
-		e.Logger.Error("failed to start server", "error", err)
+	<-ctx.Done()
+
+	shutdownCtx, cancel := context.WithTimeout(context.Background(), conf.ShutdownTimeout)
+	defer cancel()
+
+	if err := e.Shutdown(shutdownCtx); err != nil {
+		e.Logger.Fatal(err)
 	}
 }
