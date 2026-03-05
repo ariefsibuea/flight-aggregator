@@ -23,13 +23,18 @@ func NewClient() provider.FlightFetcher {
 
 // Fetch returns a list of flights from the LionAir provider.
 func (c *Client) Fetch(ctx context.Context, req model.SearchRequest) ([]model.Flight, error) {
-	// NOTE: Currently, this method returns mock data with a random delay between 200 - 400 milliseconds. Below, it
-	// generates the delay, pauses execution, and then returns the mock data.
-	min, max := 200, 400
-	delay := time.Duration(rand.IntN(max-min+1)+min) * time.Millisecond
-	time.Sleep(delay)
+	// NOTE: Currently, this method only simulates flight provider by returning mock data after a random delay
+	// between 100 - 200 milliseconds.
 
-	// Unmarshal the embedded JSON data into a model.LionAirResponse.
+	min, max := 100, 200
+	delay := time.Duration(rand.IntN(max-min+1)+min) * time.Millisecond
+
+	select {
+	case <-time.After(delay):
+	case <-ctx.Done():
+		return nil, ctx.Err()
+	}
+
 	var response model.LionAirResponse
 	if err := json.Unmarshal(mockData, &response); err != nil {
 		return nil, err
