@@ -8,5 +8,4 @@ import (
 
 type FlightFetcher interface {
 	Fetch(ctx context.Context, req model.SearchRequest) ([]model.Flight, error)
-	Name() string
 }
