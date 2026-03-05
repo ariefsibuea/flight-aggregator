@@ -9,14 +9,14 @@ import (
 	"os/signal"
 	"syscall"
 
-	"github.com/ariefsibuea/flight-aggregator/configs"
+	"github.com/ariefsibuea/flight-aggregator/config"
 
 	"github.com/labstack/echo/v4"
 )
 
 func main() {
 	e := echo.New()
-	conf := configs.Get()
+	conf := config.Get()
 
 	e.GET("/health", func(c echo.Context) error {
 		return c.JSON(http.StatusOK, map[string]interface{}{
