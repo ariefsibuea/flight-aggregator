@@ -22,14 +22,15 @@ func NewClient() provider.FlightFetcher {
 	return &Client{}
 }
 
+// Name returns provider's name.
+func (c *Client) Name() string {
+	return "AirAsia"
+}
+
 // Fetch returns a list of flights from the AirAsia provider.
 func (c *Client) Fetch(ctx context.Context, req model.SearchRequest) ([]model.Flight, error) {
 	// NOTE: Currently, this method only simulates flight provider by returning mock data after a random delay
 	// between 50 - 150 milliseconds and the success rate is 90%.
-
-	if rand.IntN(100) < 10 {
-		return nil, fmt.Errorf("failed to fetch AirAsia flights")
-	}
 
 	min, max := 50, 150
 	delay := time.Duration(rand.IntN(max-min+1)+min) * time.Millisecond
@@ -38,6 +39,10 @@ func (c *Client) Fetch(ctx context.Context, req model.SearchRequest) ([]model.Fl
 	case <-time.After(delay):
 	case <-ctx.Done():
 		return nil, ctx.Err()
+	}
+
+	if rand.IntN(100) < 10 {
+		return nil, fmt.Errorf("failed to fetch AirAsia flights")
 	}
 
 	var response model.AirAsiaResponse

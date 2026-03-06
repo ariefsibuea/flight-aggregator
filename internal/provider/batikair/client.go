@@ -21,6 +21,11 @@ func NewClient() provider.FlightFetcher {
 	return &Client{}
 }
 
+// Name returns provider's name.
+func (c *Client) Name() string {
+	return "Batik Air"
+}
+
 // Fetch returns a list of flights from the BatikAir provider.
 func (c *Client) Fetch(ctx context.Context, req model.SearchRequest) ([]model.Flight, error) {
 	// NOTE: Currently, this method only simulates flight provider by returning mock data after a random delay

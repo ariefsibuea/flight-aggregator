@@ -22,11 +22,11 @@ type SearchResponse struct {
 }
 
 type SearchCriteria struct {
-	Origin        string    `json:"origin"`
-	Destination   string    `json:"destination"`
-	DepartureDate time.Time `json:"departure_date"`
-	Passengers    int       `json:"passengers"`
-	CabinClass    string    `json:"cabin_class"`
+	Origin        string     `json:"origin"`
+	Destination   string     `json:"destination"`
+	DepartureDate types.Date `json:"departure_date"`
+	Passengers    int        `json:"passengers"`
+	CabinClass    string     `json:"cabin_class"`
 }
 
 type SearchMetadata struct {

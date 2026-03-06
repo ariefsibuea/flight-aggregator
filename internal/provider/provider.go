@@ -7,5 +7,6 @@ import (
 )
 
 type FlightFetcher interface {
+	Name() string
 	Fetch(ctx context.Context, req model.SearchRequest) ([]model.Flight, error)
 }
