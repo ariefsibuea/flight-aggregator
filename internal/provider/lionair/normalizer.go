@@ -6,7 +6,7 @@ import (
 	"strings"
 
 	"github.com/ariefsibuea/flight-aggregator/internal/model"
-	"github.com/ariefsibuea/flight-aggregator/pkg/timeutil"
+	"github.com/ariefsibuea/flight-aggregator/internal/pkg/timeutil"
 )
 
 func ToFlights(res model.LionAirResponse) []model.Flight {

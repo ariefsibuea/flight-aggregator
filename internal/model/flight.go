@@ -3,7 +3,7 @@ package model
 import (
 	"time"
 
-	"github.com/ariefsibuea/flight-aggregator/pkg/timeutil"
+	"github.com/ariefsibuea/flight-aggregator/internal/pkg/timeutil"
 )
 
 type SearchRequest struct {

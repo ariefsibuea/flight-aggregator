@@ -7,9 +7,9 @@ import (
 	"strings"
 
 	"github.com/ariefsibuea/flight-aggregator/internal/model"
-	"github.com/ariefsibuea/flight-aggregator/pkg/airport"
-	"github.com/ariefsibuea/flight-aggregator/pkg/strutil"
-	"github.com/ariefsibuea/flight-aggregator/pkg/timeutil"
+	"github.com/ariefsibuea/flight-aggregator/internal/pkg/airport"
+	"github.com/ariefsibuea/flight-aggregator/internal/pkg/strutil"
+	"github.com/ariefsibuea/flight-aggregator/internal/pkg/timeutil"
 )
 
 func ToFlights(res model.AirAsiaResponse) []model.Flight {
@@ -83,6 +83,8 @@ func ToFlights(res model.AirAsiaResponse) []model.Flight {
 	return flights
 }
 
+// getAirlineCode extracts the airline code from a flight code. IATA flight codes begin with a 2-character
+// airline designator followed by a 1-4 digit flight number, e.g.: QZ520 → QZ.
 func getAirlineCode(flightCode string) string {
 	if len(flightCode) >= 2 {
 		return flightCode[:2]
