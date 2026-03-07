@@ -1,6 +1,8 @@
 package model
 
 import (
+	"fmt"
+	"strings"
 	"time"
 
 	"github.com/ariefsibuea/flight-aggregator/internal/pkg/timeutil"
@@ -15,6 +17,35 @@ type SearchRequest struct {
 	CabinClass    string         `json:"cabin_class"`
 }
 
+func (r *SearchRequest) Validate() error {
+	now := time.Now().UTC()
+	todayDate := time.Date(now.Year(), now.Month(), now.Day(), 0, 0, 0, 0, time.UTC)
+
+	if strings.TrimSpace(r.Origin) == "" {
+		return fmt.Errorf("origin is empty")
+	}
+	if strings.TrimSpace(r.Destination) == "" {
+		return fmt.Errorf("destination is empty")
+	}
+	if r.DepartureDate.IsZero() {
+		return fmt.Errorf("departure date is zero")
+	}
+	if r.DepartureDate.Before(todayDate) {
+		return fmt.Errorf("departure date must be equal or greater than today")
+	}
+	if r.ReturnDate != nil && !r.ReturnDate.After(r.DepartureDate.Time) {
+		return fmt.Errorf("return date must be after departure date")
+	}
+	if r.Passengers < 1 {
+		return fmt.Errorf("minimum passengers is 1")
+	}
+	if strings.TrimSpace(r.CabinClass) == "" {
+		return fmt.Errorf("cabin class is empty")
+	}
+
+	return nil
+}
+
 type SearchResponse struct {
 	SearchCriteria SearchCriteria `json:"search_criteria"`
 	SearchMetadata SearchMetadata `json:"metadata"`
@@ -22,11 +53,12 @@ type SearchResponse struct {
 }
 
 type SearchCriteria struct {
-	Origin        string        `json:"origin"`
-	Destination   string        `json:"destination"`
-	DepartureDate timeutil.Date `json:"departure_date"`
-	Passengers    int           `json:"passengers"`
-	CabinClass    string        `json:"cabin_class"`
+	Origin        string         `json:"origin"`
+	Destination   string         `json:"destination"`
+	DepartureDate timeutil.Date  `json:"departure_date"`
+	ReturnDate    *timeutil.Date `json:"return_date,omitempty"`
+	Passengers    int            `json:"passengers"`
+	CabinClass    string         `json:"cabin_class"`
 }
 
 type SearchMetadata struct {

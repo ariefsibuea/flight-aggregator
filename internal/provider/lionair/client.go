@@ -4,6 +4,7 @@ import (
 	"context"
 	_ "embed"
 	"encoding/json"
+	"fmt"
 	"math/rand/v2"
 	"time"
 
@@ -40,10 +41,10 @@ func (c *Client) Fetch(ctx context.Context, req model.SearchRequest) ([]model.Fl
 		return nil, ctx.Err()
 	}
 
-	var response model.LionAirResponse
-	if err := json.Unmarshal(mockData, &response); err != nil {
-		return nil, err
+	var res model.LionAirResponse
+	if err := json.Unmarshal(mockData, &res); err != nil {
+		return nil, fmt.Errorf("failed to unmarshal response: %w", err)
 	}
 
-	return ToFlights(response), nil
+	return ToFlights(res), nil
 }

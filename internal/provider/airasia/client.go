@@ -45,10 +45,10 @@ func (c *Client) Fetch(ctx context.Context, req model.SearchRequest) ([]model.Fl
 		return nil, fmt.Errorf("failed to fetch AirAsia flights")
 	}
 
-	var response model.AirAsiaResponse
-	if err := json.Unmarshal(mockData, &response); err != nil {
-		return nil, err
+	var res model.AirAsiaResponse
+	if err := json.Unmarshal(mockData, &res); err != nil {
+		return nil, fmt.Errorf("failed to unmarshal response: %w", err)
 	}
 
-	return ToFlights(response), nil
+	return ToFlights(res), nil
 }

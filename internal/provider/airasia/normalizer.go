@@ -20,7 +20,6 @@ func ToFlights(res model.AirAsiaResponse) []model.Flight {
 			ID:             fmt.Sprintf("%s_AirAsia", f.FlightCode),
 			Provider:       "AirAsia",
 			FlightNumber:   f.FlightCode,
-			Stops:          0,
 			AvailableSeats: f.Seats,
 			CabinClass:     strings.ToLower(f.CabinClass),
 		}

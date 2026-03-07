@@ -17,7 +17,6 @@ func ToFlights(res model.LionAirResponse) []model.Flight {
 			ID:             fmt.Sprintf("%s_LionAir", f.ID),
 			Provider:       "Lion Air",
 			FlightNumber:   f.ID,
-			Stops:          0,
 			AvailableSeats: f.SeatsLeft,
 			CabinClass:     strings.ToLower(f.Pricing.FareType),
 		}
