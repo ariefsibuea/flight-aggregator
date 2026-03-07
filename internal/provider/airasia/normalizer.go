@@ -7,6 +7,7 @@ import (
 	"strings"
 
 	"github.com/ariefsibuea/flight-aggregator/internal/model"
+	"github.com/ariefsibuea/flight-aggregator/pkg/airport"
 	"github.com/ariefsibuea/flight-aggregator/pkg/strutil"
 	"github.com/ariefsibuea/flight-aggregator/pkg/timeutil"
 )
@@ -36,7 +37,7 @@ func ToFlights(res model.AirAsiaResponse) []model.Flight {
 		}
 		flight.Departure = model.FlightEndpoint{
 			Airport:   f.FromAirport,
-			City:      "",
+			City:      airport.City(f.FromAirport),
 			Datetime:  departureDatetime,
 			Timestamp: departureDatetime.Unix(),
 		}
@@ -48,7 +49,7 @@ func ToFlights(res model.AirAsiaResponse) []model.Flight {
 		}
 		flight.Arrival = model.FlightEndpoint{
 			Airport:   f.ToAirport,
-			City:      "",
+			City:      airport.City(f.ToAirport),
 			Datetime:  arrivalDatetime,
 			Timestamp: arrivalDatetime.Unix(),
 		}
