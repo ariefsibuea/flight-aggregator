@@ -45,5 +45,5 @@ func (c *Client) Fetch(ctx context.Context, req model.SearchRequest) ([]model.Fl
 		return nil, err
 	}
 
-	return LionAirResponseToFlights(response), nil
+	return ToFlights(response), nil
 }

@@ -1,4 +1,4 @@
-package types
+package timeutil
 
 import (
 	"strings"

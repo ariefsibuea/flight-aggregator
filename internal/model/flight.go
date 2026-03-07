@@ -3,16 +3,16 @@ package model
 import (
 	"time"
 
-	"github.com/ariefsibuea/flight-aggregator/pkg/types"
+	"github.com/ariefsibuea/flight-aggregator/pkg/timeutil"
 )
 
 type SearchRequest struct {
-	Origin        string      `json:"origin"`
-	Destination   string      `json:"destination"`
-	DepartureDate types.Date  `json:"departure_date"`
-	ReturnDate    *types.Date `json:"return_date,omitempty"`
-	Passengers    int         `json:"passengers"`
-	CabinClass    string      `json:"cabin_class"`
+	Origin        string         `json:"origin"`
+	Destination   string         `json:"destination"`
+	DepartureDate timeutil.Date  `json:"departure_date"`
+	ReturnDate    *timeutil.Date `json:"return_date,omitempty"`
+	Passengers    int            `json:"passengers"`
+	CabinClass    string         `json:"cabin_class"`
 }
 
 type SearchResponse struct {
@@ -22,11 +22,11 @@ type SearchResponse struct {
 }
 
 type SearchCriteria struct {
-	Origin        string     `json:"origin"`
-	Destination   string     `json:"destination"`
-	DepartureDate types.Date `json:"departure_date"`
-	Passengers    int        `json:"passengers"`
-	CabinClass    string     `json:"cabin_class"`
+	Origin        string        `json:"origin"`
+	Destination   string        `json:"destination"`
+	DepartureDate timeutil.Date `json:"departure_date"`
+	Passengers    int           `json:"passengers"`
+	CabinClass    string        `json:"cabin_class"`
 }
 
 type SearchMetadata struct {

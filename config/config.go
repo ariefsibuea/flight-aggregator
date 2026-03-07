@@ -15,7 +15,7 @@ var (
 type Config struct {
 	Port            int           `envconfig:"PORT" default:"8080"`
 	ShutdownTimeout time.Duration `envconfig:"SHUTDOWN_TIMEOUT" default:"5s"`
-	ProviderTimeout time.Duration `envconfig:"PROVIDER_TIMEOUT" default:"200ms"`
+	ProviderTimeout time.Duration `envconfig:"PROVIDER_TIMEOUT" default:"500ms"`
 
 	RedisHost string `envconfig:"REDIS_HOST" default:"redis"`
 	RedisPort int    `envconfig:"REDIS_PORT" default:"6379"`
