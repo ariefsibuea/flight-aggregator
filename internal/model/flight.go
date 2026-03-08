@@ -8,13 +8,64 @@ import (
 	"github.com/ariefsibuea/flight-aggregator/internal/pkg/timeutil"
 )
 
+type TimeWindow string
+
+const (
+	TimeWindowEarlyMorning TimeWindow = "early_morning"
+	TimeWindowMorning      TimeWindow = "morning"
+	TimeWindowAfternoon    TimeWindow = "afternoon"
+	TimeWindowEvening      TimeWindow = "evening"
+)
+
+var ValidSortFields = map[string]bool{
+	"price":     true,
+	"duration":  true,
+	"departure": true,
+	"arrival":   true,
+	"score":     true,
+}
+
+var ValidSortDirections = map[string]bool{
+	"asc":  true,
+	"desc": true,
+}
+
+func MatchTimeWindows(hour int, timeWindows []TimeWindow) bool {
+	for _, tw := range timeWindows {
+		switch tw {
+		case TimeWindowEarlyMorning:
+			if hour >= 0 && hour < 6 {
+				return true
+			}
+		case TimeWindowMorning:
+			if hour >= 6 && hour < 12 {
+				return true
+			}
+		case TimeWindowAfternoon:
+			if hour >= 12 && hour < 18 {
+				return true
+			}
+		case TimeWindowEvening:
+			if hour >= 18 && hour < 24 {
+				return true
+			}
+		}
+	}
+	return false
+}
+
 type SearchRequest struct {
+	// initial request parameters
 	Origin        string         `json:"origin"`
 	Destination   string         `json:"destination"`
 	DepartureDate timeutil.Date  `json:"departure_date"`
-	ReturnDate    *timeutil.Date `json:"return_date,omitempty"`
+	ReturnDate    *timeutil.Date `json:"return_date"`
 	Passengers    int            `json:"passengers"`
 	CabinClass    string         `json:"cabin_class"`
+	// filter parameter
+	Filter *SearchFilter `json:"filter"`
+	// sort parameter
+	Sort *SearchSort `json:"sort"`
 }
 
 func (r *SearchRequest) Validate() error {
@@ -37,7 +88,32 @@ func (r *SearchRequest) Validate() error {
 		return fmt.Errorf("cabin class is empty")
 	}
 
+	if r.Sort != nil {
+		if r.Sort.Field != "" && !ValidSortFields[r.Sort.Field] {
+			return fmt.Errorf("sort.field must be one of price, duration, departure, arrival, score")
+		}
+		if r.Sort.Direction != "" && !ValidSortDirections[r.Sort.Direction] {
+			return fmt.Errorf("sort.direction must be asc or desc")
+		}
+	}
+
 	return nil
+}
+
+type SearchFilter struct {
+	MinPrice       *int64       `json:"min_price,omitempty"`
+	MaxPrice       *int64       `json:"max_price,omitempty"`
+	MaxStops       *int         `json:"max_stops,omitempty"`
+	DepartureTimes []TimeWindow `json:"departure_times,omitempty"`
+	ArrivalTimes   []TimeWindow `json:"arrival_times,omitempty"`
+	Airlines       []string     `json:"airlines,omitempty"`
+	MinDuration    *int         `json:"min_duration,omitempty"`
+	MaxDuration    *int         `json:"max_duration,omitempty"`
+}
+
+type SearchSort struct {
+	Field     string `json:"field,omitempty"`
+	Direction string `json:"direction,omitempty"`
 }
 
 type SearchResponse struct {
@@ -79,6 +155,7 @@ type Flight struct {
 	Aircraft       *string        `json:"aircraft"`
 	Amenities      []string       `json:"amenities"`
 	Baggage        Baggage        `json:"baggage"`
+	BestValueScore float64        `json:"-"`
 }
 
 type Airline struct {

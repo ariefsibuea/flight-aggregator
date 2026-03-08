@@ -24,7 +24,7 @@ func ToFlights(res model.GarudaResponse) []model.Flight {
 
 		flight.Airline = model.Airline{
 			Name: f.Airline,
-			Code: f.AirlineCode,
+			Code: strings.ToUpper(f.AirlineCode),
 		}
 
 		if f.Aircraft != "" {

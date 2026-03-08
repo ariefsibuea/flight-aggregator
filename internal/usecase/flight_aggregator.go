@@ -18,10 +18,9 @@ type providerResult struct {
 func (f *flightUsecase) aggregate(ctx context.Context, req model.SearchRequest) ([]model.Flight, model.SearchMetadata) {
 	startTime := time.Now()
 
-	numProviders := len(f.providers)
-	resultsChan := make(chan providerResult, numProviders)
-
-	// NOTE: The pattern of fan-out,fan-in inspired by https://go.dev/blog/pipelines.
+	// NOTE: Implement fan-out,fan-in here, inspired by https://go.dev/blog/pipelines.
+	var numProviders = len(f.providers)
+	var resultsChan = make(chan providerResult, numProviders)
 	var wg sync.WaitGroup
 
 	for _, p := range f.providers {

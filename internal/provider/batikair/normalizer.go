@@ -26,7 +26,7 @@ func ToFlights(res model.BatikAirResponse) []model.Flight {
 
 		flight.Airline = model.Airline{
 			Name: f.AirlineName,
-			Code: f.AirlineIATA,
+			Code: strings.ToUpper(f.AirlineIATA),
 		}
 
 		if f.AircraftModel != "" {

@@ -23,7 +23,7 @@ func ToFlights(res model.LionAirResponse) []model.Flight {
 
 		flight.Airline = model.Airline{
 			Name: f.Carrier.Name,
-			Code: f.Carrier.IATA,
+			Code: strings.ToUpper(f.Carrier.IATA),
 		}
 
 		if f.PlaneType != "" {

@@ -2,11 +2,13 @@ package usecase
 
 import (
 	"context"
-	"sync"
+	"fmt"
 	"time"
 
 	"github.com/ariefsibuea/flight-aggregator/internal/model"
 	"github.com/ariefsibuea/flight-aggregator/internal/provider"
+
+	"golang.org/x/sync/errgroup"
 )
 
 type FlightUsecase interface {
@@ -27,20 +29,21 @@ func (f *flightUsecase) SearchFlights(ctx context.Context, req model.SearchReque
 	startTime := time.Now()
 
 	var (
-		goFlights    []model.Flight
-		goMetadata   model.SearchMetadata
-		backFlights  []model.Flight
-		backMetadata model.SearchMetadata
+		outboundFlights  []model.Flight
+		outboundMetadata model.SearchMetadata
+		inboundFlights   []model.Flight
+		inboundMetadata  model.SearchMetadata
 	)
 
-	var wg sync.WaitGroup
+	g, ctx := errgroup.WithContext(ctx)
 
-	wg.Go(func() {
-		goFlights, goMetadata = f.aggregate(ctx, req)
+	g.Go(func() error {
+		outboundFlights, outboundMetadata = f.aggregate(ctx, req)
+		return nil
 	})
 
 	if req.ReturnDate != nil {
-		wg.Go(func() {
+		g.Go(func() error {
 			reqReturn := model.SearchRequest{
 				Origin:        req.Destination,
 				Destination:   req.Origin,
@@ -48,13 +51,21 @@ func (f *flightUsecase) SearchFlights(ctx context.Context, req model.SearchReque
 				Passengers:    req.Passengers,
 				CabinClass:    req.CabinClass,
 			}
-			backFlights, backMetadata = f.aggregate(ctx, reqReturn)
+			inboundFlights, inboundMetadata = f.aggregate(ctx, reqReturn)
+			return nil
 		})
 	}
 
-	wg.Wait()
+	if err := g.Wait(); err != nil {
+		return model.SearchResponse{}, fmt.Errorf("found an error while executing concurrent flight search: %w", err)
+	}
 
-	metadata := mergeMetadata(goMetadata, backMetadata, req.ReturnDate != nil, time.Since(startTime))
+	// TODO: For round-trip, expose outbound and inbound as separate arrays in the response.
+	flights := append(outboundFlights, inboundFlights...)
+	flights = filterAndSort(flights, req)
+
+	metadata := mergeMetadata(outboundMetadata, inboundMetadata, req.ReturnDate != nil, time.Since(startTime))
+	metadata.TotalResults = len(flights)
 
 	return model.SearchResponse{
 		SearchCriteria: model.SearchCriteria{
@@ -66,18 +77,18 @@ func (f *flightUsecase) SearchFlights(ctx context.Context, req model.SearchReque
 			CabinClass:    req.CabinClass,
 		},
 		SearchMetadata: metadata,
-		Flights:        append(goFlights, backFlights...),
+		Flights:        flights,
 	}, nil
 }
 
-func mergeMetadata(goMeta, backMeta model.SearchMetadata, isRoundTrip bool, dur time.Duration) model.SearchMetadata {
-	meta := goMeta
+func mergeMetadata(outboundMeta, inboundMeta model.SearchMetadata, isRoundTrip bool, dur time.Duration) model.SearchMetadata {
+	meta := outboundMeta
 	meta.SearchTimeMS = int(dur.Milliseconds())
 
 	if isRoundTrip {
-		meta.TotalResults += backMeta.TotalResults
-		meta.ProvidersSucceeded = min(goMeta.ProvidersSucceeded, backMeta.ProvidersSucceeded)
-		meta.ProvidersFailed = max(goMeta.ProvidersFailed, backMeta.ProvidersFailed)
+		meta.TotalResults += inboundMeta.TotalResults
+		meta.ProvidersSucceeded = min(outboundMeta.ProvidersSucceeded, inboundMeta.ProvidersSucceeded)
+		meta.ProvidersFailed = max(outboundMeta.ProvidersFailed, inboundMeta.ProvidersFailed)
 	}
 
 	return meta

@@ -26,7 +26,7 @@ func ToFlights(res model.AirAsiaResponse) []model.Flight {
 
 		flight.Airline = model.Airline{
 			Name: f.Airline,
-			Code: getAirlineCode(f.FlightCode),
+			Code: strings.ToUpper(getAirlineCode(f.FlightCode)),
 		}
 
 		departureDatetime, err := timeutil.ParseDateTime(f.DepartTime)
