@@ -18,9 +18,6 @@ type SearchRequest struct {
 }
 
 func (r *SearchRequest) Validate() error {
-	now := time.Now().UTC()
-	todayDate := time.Date(now.Year(), now.Month(), now.Day(), 0, 0, 0, 0, time.UTC)
-
 	if strings.TrimSpace(r.Origin) == "" {
 		return fmt.Errorf("origin is empty")
 	}
@@ -28,10 +25,7 @@ func (r *SearchRequest) Validate() error {
 		return fmt.Errorf("destination is empty")
 	}
 	if r.DepartureDate.IsZero() {
-		return fmt.Errorf("departure date is zero")
-	}
-	if r.DepartureDate.Before(todayDate) {
-		return fmt.Errorf("departure date must be equal or greater than today")
+		return fmt.Errorf("departure date is empty")
 	}
 	if r.ReturnDate != nil && !r.ReturnDate.After(r.DepartureDate.Time) {
 		return fmt.Errorf("return date must be after departure date")
