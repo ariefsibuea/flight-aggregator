@@ -6,6 +6,7 @@ import (
 	"strings"
 
 	"github.com/ariefsibuea/flight-aggregator/internal/model"
+	"github.com/ariefsibuea/flight-aggregator/internal/pkg/strutil"
 	"github.com/ariefsibuea/flight-aggregator/internal/pkg/timeutil"
 )
 
@@ -72,6 +73,7 @@ func ToFlights(res model.LionAirResponse) []model.Flight {
 		flight.Price = model.Price{
 			Amount:   int64(f.Pricing.Total),
 			Currency: f.Pricing.Currency,
+			Display:  strutil.FormatCurrency(int64(f.Pricing.Total), "Rp"),
 		}
 
 		amenities := make([]string, 0)

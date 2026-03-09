@@ -16,7 +16,10 @@ type Config struct {
 	ServerPort            int           `envconfig:"SERVER_PORT" default:"8080"`
 	ServerShutdownTimeout time.Duration `envconfig:"SERVER_SHUTDOWN_TIMEOUT" default:"5s"`
 
-	ProviderTimeout time.Duration `envconfig:"PROVIDER_TIMEOUT" default:"500ms"`
+	ProviderTimeout      time.Duration `envconfig:"PROVIDER_TIMEOUT" default:"500ms"`
+	ProviderMaxRetries   int           `envconfig:"PROVIDER_MAX_RETRIES" default:"3"`
+	ProviderRetryDelay   time.Duration `envconfig:"PROVIDER_RETRY_DELAY" default:"100ms"`
+	ProviderRateLimitRPS float64       `envconfig:"PROVIDER_RATE_LIMIT_RPS" default:"10"`
 
 	DefaultCacheTTL time.Duration `envconfig:"DEFAULT_CACHE_TTL" default:"300s"`
 

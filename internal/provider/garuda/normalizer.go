@@ -6,6 +6,7 @@ import (
 	"strings"
 
 	"github.com/ariefsibuea/flight-aggregator/internal/model"
+	"github.com/ariefsibuea/flight-aggregator/internal/pkg/strutil"
 	"github.com/ariefsibuea/flight-aggregator/internal/pkg/timeutil"
 )
 
@@ -93,6 +94,7 @@ func ToFlights(res model.GarudaResponse) []model.Flight {
 		flight.Price = model.Price{
 			Amount:   int64(f.Price.Amount),
 			Currency: f.Price.Currency,
+			Display:  strutil.FormatCurrency(int64(f.Price.Amount), "Rp"),
 		}
 
 		// Define empty slice of string to prevent nil value.

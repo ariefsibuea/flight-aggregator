@@ -10,6 +10,7 @@ import (
 	"syscall"
 
 	"github.com/ariefsibuea/flight-aggregator/config"
+	"github.com/ariefsibuea/flight-aggregator/internal/cache"
 	"github.com/ariefsibuea/flight-aggregator/internal/handler"
 	"github.com/ariefsibuea/flight-aggregator/internal/provider"
 	"github.com/ariefsibuea/flight-aggregator/internal/provider/airasia"
@@ -25,28 +26,44 @@ func main() {
 	e := echo.New()
 	conf := config.Get()
 
+	e.HTTPErrorHandler = handler.ErrorHandler
+
 	e.GET("/health", func(c echo.Context) error {
 		return c.JSON(http.StatusOK, map[string]any{
-			"status": "OK",
+			"status": "ok",
 		})
 	})
 
 	apiGroup := e.Group("/api/v1")
 
-	providers := []provider.FlightFetcher{
+	rawProviders := []provider.FlightFetcher{
 		garuda.NewClient(),
 		lionair.NewClient(),
 		batikair.NewClient(),
 		airasia.NewClient(),
 	}
-	flightUsecase := usecase.NewFlightUsecase(providers)
+
+	providers := make([]provider.FlightFetcher, 0, len(rawProviders))
+	for _, p := range rawProviders {
+		providers = append(providers,
+			provider.NewFlightFetcherLimiter(
+				provider.NewFlightFetcherRetrier(p, conf.ProviderMaxRetries, conf.ProviderRetryDelay),
+				conf.ProviderRateLimitRPS,
+			),
+		)
+	}
+
+	redisAddr := fmt.Sprintf("%s:%d", conf.RedisHost, conf.RedisPort)
+	redisCache := cache.NewRedisCache(redisAddr)
+
+	flightUsecase := usecase.NewFlightUsecase(providers, redisCache, conf.DefaultCacheTTL)
 	handler.InitFlightHandler(apiGroup, flightUsecase, conf.ProviderTimeout)
 
 	ctx, stop := signal.NotifyContext(context.Background(), os.Interrupt, syscall.SIGTERM)
 	defer stop()
 
 	go func() {
-		address := fmt.Sprintf(":%d", conf.Port)
+		address := fmt.Sprintf(":%d", conf.ServerPort)
 		if err := e.Start(address); err != nil && !errors.Is(err, http.ErrServerClosed) {
 			e.Logger.Fatalf("shutting down the server: %v", err)
 		}
@@ -54,7 +71,7 @@ func main() {
 
 	<-ctx.Done()
 
-	shutdownCtx, cancel := context.WithTimeout(context.Background(), conf.ShutdownTimeout)
+	shutdownCtx, cancel := context.WithTimeout(context.Background(), conf.ServerShutdownTimeout)
 	defer cancel()
 
 	if err := e.Shutdown(shutdownCtx); err != nil {

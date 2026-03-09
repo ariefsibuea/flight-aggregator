@@ -71,6 +71,7 @@ func ToFlights(res model.AirAsiaResponse) []model.Flight {
 		flight.Price = model.Price{
 			Amount:   int64(f.PriceIDR),
 			Currency: "IDR",
+			Display:  strutil.FormatCurrency(int64(f.PriceIDR), "Rp"),
 		}
 
 		flight.Amenities = make([]string, 0)

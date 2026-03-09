@@ -97,26 +97,24 @@ func filterByArrivalTimes(flights []model.Flight, times []model.TimeWindow) []mo
 	return filteredFlights
 }
 
-func filterByAirlines(flights []model.Flight, airlineCodes []string) []model.Flight {
-	if len(airlineCodes) == 0 {
+func filterByAirlines(flights []model.Flight, airlines []string) []model.Flight {
+	if len(airlines) == 0 {
 		return flights
 	}
 
-	existedAirlineCodes := make(map[string]bool)
-	for _, code := range airlineCodes {
-		// In order to ensure that the provided airline code format is upper-case, ToUpper is re-executed here.
-		existedAirlineCodes[strings.ToUpper(code)] = true
+	allowedAirlines := make(map[string]bool, len(airlines))
+	for _, airline := range airlines {
+		allowedAirlines[strings.ToLower(airline)] = true
 	}
 
 	filteredFlights := make([]model.Flight, 0, len(flights))
 	for _, f := range flights {
-		if _, exist := existedAirlineCodes[f.Airline.Code]; exist {
+		if allowedAirlines[strings.ToLower(f.Airline.Code)] {
 			filteredFlights = append(filteredFlights, f)
 		}
 	}
 
 	return filteredFlights
-
 }
 
 func filterByDurationRange(flights []model.Flight, shortest, longest *int) []model.Flight {

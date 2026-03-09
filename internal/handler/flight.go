@@ -2,10 +2,12 @@ package handler
 
 import (
 	"context"
+	"errors"
 	"net/http"
 	"time"
 
 	"github.com/ariefsibuea/flight-aggregator/internal/model"
+	pkgerr "github.com/ariefsibuea/flight-aggregator/internal/pkg/errors"
 	"github.com/ariefsibuea/flight-aggregator/internal/usecase"
 
 	"github.com/labstack/echo/v4"
@@ -16,9 +18,9 @@ type flightHandler struct {
 	providerTimeout time.Duration
 }
 
-func InitFlightHandler(e *echo.Group, usecase usecase.FlightUsecase, providerTimeout time.Duration) {
+func InitFlightHandler(e *echo.Group, uc usecase.FlightUsecase, providerTimeout time.Duration) {
 	handler := &flightHandler{
-		usecase:         usecase,
+		usecase:         uc,
 		providerTimeout: providerTimeout,
 	}
 
@@ -28,15 +30,11 @@ func InitFlightHandler(e *echo.Group, usecase usecase.FlightUsecase, providerTim
 func (f *flightHandler) searchFlights(c echo.Context) error {
 	var req model.SearchRequest
 	if err := c.Bind(&req); err != nil {
-		return c.JSON(http.StatusBadRequest, map[string]any{
-			"error": "invalid request body",
-		})
+		return pkgerr.BadRequestError("invalid request body")
 	}
 
 	if err := req.Validate(); err != nil {
-		return c.JSON(http.StatusBadRequest, map[string]any{
-			"error": err.Error(),
-		})
+		return pkgerr.ValidationErrorf("validation failed: %v", err)
 	}
 
 	ctx, cancel := context.WithTimeout(c.Request().Context(), f.providerTimeout)
@@ -44,10 +42,11 @@ func (f *flightHandler) searchFlights(c echo.Context) error {
 
 	res, err := f.usecase.SearchFlights(ctx, req)
 	if err != nil {
-		return c.JSON(http.StatusInternalServerError, map[string]any{
-			"error": "failed to search flights",
-		})
+		if errors.Is(err, context.DeadlineExceeded) {
+			return pkgerr.BadRequestError("search request timed out")
+		}
+		return err
 	}
 
-	return c.JSON(http.StatusOK, res)
+	return Success(c, http.StatusOK, res)
 }

@@ -117,9 +117,11 @@ type SearchSort struct {
 }
 
 type SearchResponse struct {
-	SearchCriteria SearchCriteria `json:"search_criteria"`
-	SearchMetadata SearchMetadata `json:"metadata"`
-	Flights        []Flight       `json:"flights"`
+	SearchCriteria  SearchCriteria `json:"search_criteria"`
+	SearchMetadata  SearchMetadata `json:"metadata"`
+	Flights         []Flight       `json:"flights,omitempty"`
+	OutboundFlights []Flight       `json:"outbound_flights,omitempty"`
+	InboundFlights  []Flight       `json:"inbound_flights,omitempty"`
 }
 
 type SearchCriteria struct {
@@ -178,6 +180,7 @@ type Duration struct {
 type Price struct {
 	Amount   int64  `json:"amount"`
 	Currency string `json:"currency"`
+	Display  string `json:"display,omitempty"`
 }
 
 type Baggage struct {

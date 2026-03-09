@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"time"
 
+	"github.com/ariefsibuea/flight-aggregator/internal/cache"
 	"github.com/ariefsibuea/flight-aggregator/internal/model"
 	"github.com/ariefsibuea/flight-aggregator/internal/provider"
 
@@ -16,12 +17,16 @@ type FlightUsecase interface {
 }
 
 type flightUsecase struct {
-	providers []provider.FlightFetcher
+	providers       []provider.FlightFetcher
+	cache           cache.Cache
+	defaultCacheTTL time.Duration
 }
 
-func NewFlightUsecase(providers []provider.FlightFetcher) FlightUsecase {
+func NewFlightUsecase(providers []provider.FlightFetcher, c cache.Cache, ttl time.Duration) FlightUsecase {
 	return &flightUsecase{
-		providers: providers,
+		providers:       providers,
+		cache:           c,
+		defaultCacheTTL: ttl,
 	}
 }
 
@@ -60,24 +65,41 @@ func (f *flightUsecase) SearchFlights(ctx context.Context, req model.SearchReque
 		return model.SearchResponse{}, fmt.Errorf("found an error while executing concurrent flight search: %w", err)
 	}
 
-	// TODO: For round-trip, expose outbound and inbound as separate arrays in the response.
-	flights := append(outboundFlights, inboundFlights...)
-	flights = filterAndSort(flights, req)
+	criteria := model.SearchCriteria{
+		Origin:        req.Origin,
+		Destination:   req.Destination,
+		DepartureDate: req.DepartureDate,
+		ReturnDate:    req.ReturnDate,
+		Passengers:    req.Passengers,
+		CabinClass:    req.CabinClass,
+	}
 
-	metadata := mergeMetadata(outboundMetadata, inboundMetadata, req.ReturnDate != nil, time.Since(startTime))
-	metadata.TotalResults = len(flights)
+	if req.ReturnDate != nil {
+		// Round-trip: filter and sort each leg independently, expose as separate arrays.
+		outboundFlights = filterAndSort(outboundFlights, req)
+		inboundFlights = filterAndSort(inboundFlights, req)
+
+		metadata := mergeMetadata(outboundMetadata, inboundMetadata, true, time.Since(startTime))
+		metadata.TotalResults = len(outboundFlights) + len(inboundFlights)
+
+		return model.SearchResponse{
+			SearchCriteria:  criteria,
+			SearchMetadata:  metadata,
+			OutboundFlights: outboundFlights,
+			InboundFlights:  inboundFlights,
+		}, nil
+	}
+
+	// one-way search.
+	outboundFlights = filterAndSort(outboundFlights, req)
+
+	metadata := mergeMetadata(outboundMetadata, model.SearchMetadata{}, false, time.Since(startTime))
+	metadata.TotalResults = len(outboundFlights)
 
 	return model.SearchResponse{
-		SearchCriteria: model.SearchCriteria{
-			Origin:        req.Origin,
-			Destination:   req.Destination,
-			DepartureDate: req.DepartureDate,
-			ReturnDate:    req.ReturnDate,
-			Passengers:    req.Passengers,
-			CabinClass:    req.CabinClass,
-		},
+		SearchCriteria: criteria,
 		SearchMetadata: metadata,
-		Flights:        flights,
+		Flights:        outboundFlights,
 	}, nil
 }
 
@@ -86,7 +108,6 @@ func mergeMetadata(outboundMeta, inboundMeta model.SearchMetadata, isRoundTrip b
 	meta.SearchTimeMS = int(dur.Milliseconds())
 
 	if isRoundTrip {
-		meta.TotalResults += inboundMeta.TotalResults
 		meta.ProvidersSucceeded = min(outboundMeta.ProvidersSucceeded, inboundMeta.ProvidersSucceeded)
 		meta.ProvidersFailed = max(outboundMeta.ProvidersFailed, inboundMeta.ProvidersFailed)
 	}

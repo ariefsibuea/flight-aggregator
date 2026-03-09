@@ -76,6 +76,7 @@ func ToFlights(res model.BatikAirResponse) []model.Flight {
 		flight.Price = model.Price{
 			Amount:   int64(f.Fare.TotalPrice),
 			Currency: f.Fare.CurrencyCode,
+			Display:  strutil.FormatCurrency(int64(f.Fare.TotalPrice), "Rp"),
 		}
 
 		flight.Amenities = f.OnboardServices
