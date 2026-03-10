@@ -59,6 +59,10 @@ func main() {
 	flightUsecase := usecase.NewFlightUsecase(providers, redisCache, conf.DefaultCacheTTL)
 	handler.InitFlightHandler(apiGroup, flightUsecase, conf.ProviderTimeout)
 
+	e.Server.ReadTimeout = conf.ServerReadTimeout
+	e.Server.WriteTimeout = conf.ServerWriteTimeout
+	e.Server.IdleTimeout = conf.ServerIdleTimeout
+
 	ctx, stop := signal.NotifyContext(context.Background(), os.Interrupt, syscall.SIGTERM)
 	defer stop()
 

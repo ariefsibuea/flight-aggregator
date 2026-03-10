@@ -15,6 +15,9 @@ var (
 type Config struct {
 	ServerPort            int           `envconfig:"SERVER_PORT" default:"8080"`
 	ServerShutdownTimeout time.Duration `envconfig:"SERVER_SHUTDOWN_TIMEOUT" default:"5s"`
+	ServerReadTimeout  time.Duration `envconfig:"SERVER_READ_TIMEOUT" default:"5s"`
+	ServerWriteTimeout time.Duration `envconfig:"SERVER_WRITE_TIMEOUT" default:"10s"`
+	ServerIdleTimeout  time.Duration `envconfig:"SERVER_IDLE_TIMEOUT" default:"60s"`
 
 	ProviderTimeout      time.Duration `envconfig:"PROVIDER_TIMEOUT" default:"500ms"`
 	ProviderMaxRetries   int           `envconfig:"PROVIDER_MAX_RETRIES" default:"3"`
